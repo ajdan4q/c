@@ -7,8 +7,8 @@
 #include <sys/syscall.h>
 #define _GNU_SOURCE
 
-#define NPRODUCER 2
-#define NCONSUMER 2
+#define NPRODUCER 1
+#define NCONSUMER 3
 #define RES_SIZE 100
 
 static pthread_mutex_t mutex;
@@ -57,6 +57,7 @@ int outqueue (void)
 }
 void *producer (void *args)
 {
+	int en;
 	Tinfo *tinfo = (Tinfo *) args;
 	tinfo->tnum = syscall(SYS_gettid);
 
@@ -64,50 +65,62 @@ void *producer (void *args)
 	pthread_cleanup_push(pcleanup, NULL);
 	while (1)
 	{
-		pthread_mutex_lock(&mutex);
+		en = pthread_mutex_lock(&mutex);
+		if (en != 0) strerror(en);
+
 		// array res full
 		while (freep + fill_len > res + RES_SIZE - 1)
 		{
-			pthread_cond_wait(&nodata, &mutex);
+			en = pthread_cond_wait(&nodata, &mutex);
+			if (en != 0) strerror(en);
 		}
 
 		//fill_data();
 		int i;
 		for (i = 0; i < fill_len; i++)
 			push('a');
-		debug("res content %s", res);
+		debug("tid %d res content %s", tinfo->tnum, res);
 
-		pthread_cond_signal(&data); // notify next consumer
+		en = pthread_cond_signal(&data); // notify next consumer
+		if (en != 0) strerror(en);
 		pthread_mutex_unlock(&mutex);
+		if (en != 0) strerror(en);
 	}
-	pthread_cleanup_pop(1);
+	pthread_cleanup_pop(0);
 }
 
 void *consumer (void *args)
 {
+	int en;
 	Tinfo *tinfo = (Tinfo *) args;
 	tinfo->tnum = syscall(SYS_gettid);
 
-	const int remove_len = 1;
+	const int remove_len = 5;
 	pthread_cleanup_push(pcleanup, NULL);
 	while (1)
 	{
-		pthread_mutex_lock(&mutex);
+		en = pthread_mutex_lock(&mutex);
+		if (en != 0) strerror(en);
+
 		while (freep - res < remove_len)
 		{
-			pthread_cond_wait(&data, &mutex);
+			en = pthread_cond_wait(&data, &mutex);
+			if (en != 0) strerror(en);
 		}
 
 		//remove_data();
 		int i;
 		for (i = 0; i < remove_len; i++)
 			pop();
-		debug("res content %s", res);
+		debug("tid %d res content %s", tinfo->tnum, res);
 
-		pthread_cond_signal(&nodata); // notify next producer
-		pthread_mutex_lock(&mutex);
+		en = pthread_cond_signal(&nodata); // notify next producer
+		if (en != 0) strerror(en);
+
+		en = pthread_mutex_unlock(&mutex);
+		if (en != 0) strerror(en);
 	}
-	pthread_cleanup_pop(1);
+	pthread_cleanup_pop(0);
 }
 
 #define mutexattr_pshared_str(i) \
@@ -173,48 +186,63 @@ int main (void)
 	// mutexattr init, set/get
 	pthread_mutexattr_t mutex_attr;
 
-	pthread_mutexattr_init(&mutex_attr);
-	pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_ERRORCHECK);
+	en = pthread_mutexattr_init(&mutex_attr);
+	if (en != 0) strerror(en);
+	en = pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_ERRORCHECK);
+	if (en != 0) strerror(en);
 
 	// how to print enum string value
-	pthread_mutexattr_getpshared(&mutex_attr, &en);
+	en = pthread_mutexattr_getpshared(&mutex_attr, &en);
+	if (en != 0) strerror(en);
 	debug("pthread mutexattr pshared (scope) %s",
 			mutexattr_pshared_str(en));
 
-	pthread_mutexattr_gettype(&mutex_attr, &en);
+	en = pthread_mutexattr_gettype(&mutex_attr, &en);
+	if (en != 0) strerror(en);
 	debug("pthread mutexattr type %s", mutexattr_type_str(en));
 
 	pthread_mutexattr_getprotocol(&mutex_attr, &en);
+	if (en != 0) strerror(en);
 	debug("pthread mutexattr protocol %d", en);
 
-	pthread_mutexattr_getprioceiling(&mutex_attr, &en);
+	en = pthread_mutexattr_getprioceiling(&mutex_attr, &en);
+	if (en != 0) strerror(en);
 	debug("pthread mutexattr priority ceiling %d", en);
 
 	// NOTE first mutex object init, then get/set mutex
 	// mutex init, get/set
-	pthread_mutex_init(&mutex, &mutex_attr);
+	en = pthread_mutex_init(&mutex, &mutex_attr);
+	if (en != 0) strerror(en);
 
-	pthread_mutex_getprioceiling(&mutex, &en);
+	en = pthread_mutex_getprioceiling(&mutex, &en);
+	if (en != 0) strerror(en);
 	debug("pthread mutex priority ceiling %d", en);
 
 	// condattr init, set/get
 	pthread_condattr_t cond_attr;
-	pthread_condattr_init(&cond_attr);
+	en = pthread_condattr_init(&cond_attr);
+	if (en != 0) strerror(en);
 
-	pthread_condattr_getpshared(&cond_attr, &en);
+	en = pthread_condattr_getpshared(&cond_attr, &en);
+	if (en != 0) strerror(en);
 	debug("pthread condattr pshared (scope) %s",
 			condattr_pshared_str(en));
 
-	pthread_cond_init(&data, &cond_attr);
-	pthread_cond_init(&nodata, &cond_attr);
+	en = pthread_cond_init(&data, &cond_attr);
+	if (en != 0) strerror(en);
+	en = pthread_cond_init(&nodata, &cond_attr);
+	if (en != 0) strerror(en);
 
 	// pthread attr init, set/get
 	pthread_attr_t pthread_attr;
 
-	pthread_attr_init(&pthread_attr);
+	en = pthread_attr_init(&pthread_attr);
+	if (en != 0) strerror(en);
 	pthread_attr_setdetachstate(&pthread_attr, PTHREAD_CREATE_DETACHED);
+	if (en != 0) strerror(en);
 	int ds;
-	pthread_attr_getdetachstate(&pthread_attr, &ds);
+	en = pthread_attr_getdetachstate(&pthread_attr, &ds);
+	if (en != 0) strerror(en);
 	debug("pthread attr detachstate %s", pthread_detach_state_str(ds));
 
 	// start consumer thread
