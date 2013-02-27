@@ -20,13 +20,20 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <signal.h>
 #define BUF_SIZE 1024
+
+static void sig_int (int); /* our signal-catching function */
 
 int main (void)
 {
 	char buf[BUF_SIZE];
 	pid_t pid;
 	int status;
+
+	// catch 'SIGINI' signal, envoke 'sig_int' signal handler
+	if (signal(SIGINT, sig_int) == SIG_ERR)
+		perror("signal");
 
 	printf("%% ");	/* set prompt */
 	/* fgets() return NULL, EOF or error */
@@ -56,6 +63,11 @@ int main (void)
 		printf("%% ");
 	}
 	if (ferror(stdin))
-		log_info("input error");
+		log_err("input error");
 	exit(EXIT_SUCCESS);
+}
+
+static void sig_int (int signo)
+{
+	printf("interrupt\n%% ");
 }

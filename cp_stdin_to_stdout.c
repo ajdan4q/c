@@ -19,11 +19,20 @@
 #include "dbg.h"
 #include <unistd.h>
 
-int main (void)
+int main (int argc, char *argv[])
 {
 	int n;
-	const int bufsize = 4096;
-	char buf[bufsize];
+
+	int bufsize;
+	if (argc == 1)
+		bufsize = 4096;
+	else
+		bufsize = atoi(argv[1]);
+
+	char *buf = malloc(bufsize);
+	if (buf == NULL) error_exit();
+	
+	//char buf[bufsize];
 
 	// read return 0 when EOF, -num for errror
 	while ((n = read(STDIN_FILENO, buf, bufsize)) > 0)
@@ -32,5 +41,6 @@ int main (void)
 	if (n < 0)
 		log_info("read error.");
 
+	free(buf);
 	exit(EXIT_SUCCESS);
 }

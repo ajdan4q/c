@@ -39,10 +39,12 @@
 
 // without errno, function set already
 #define error_exit() \
-	{ strerror(errno); exit(EXIT_FAILURE); }
+	{ log_err(""); exit(EXIT_FAILURE); }
 
 // give a errno
 #define error_exit_en(M) \
-	{ strerror(M); exit(EXIT_FAILURE); }
+	{ fprintf(stderr, "[ERROR] (%s:%s:%d) %s\n",\
+		__FILE__, __FUNCTION__, __LINE__, strerror(M));\
+		exit(EXIT_FAILURE); }
 
 #endif
