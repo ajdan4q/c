@@ -38,11 +38,17 @@
 	if (!(A)) { debug(M, ##__VA_ARGS__); errno=0; goto error; }
 
 // without errno, function set already
-#define error_exit() \
-	{ log_err(""); exit(EXIT_FAILURE); }
+#define err_exit(M, ...) \
+	{ log_err(M, ##__VA_ARGS__); exit(EXIT_FAILURE); }
+
+#define err_ret(M, ...) \
+	{ log_err(M, ##__VA_ARGS__); return(EXIT_FAILURE); }
+
+#define err_abort(M, ...) \
+	{ log_err(M, ##__VA_ARGS__); abort(); }
 
 // give a errno
-#define error_exit_en(M) \
+#define err_exit_en(M) \
 	{ fprintf(stderr, "[ERROR] (%s:%s:%d) %s\n",\
 		__FILE__, __FUNCTION__, __LINE__, strerror(M));\
 		exit(EXIT_FAILURE); }
