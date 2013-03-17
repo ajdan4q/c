@@ -1,4 +1,4 @@
-CFLAGS=-g -Wall -pthread
+CFLAGS=-g -Wall 
 
 clean:
 	find  -type f -executable -exec rm -f {} +

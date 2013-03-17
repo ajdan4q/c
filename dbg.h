@@ -9,7 +9,7 @@
 #define debug(M, ...)
 #else
 #define debug(M, ...) \
-	fprintf(stderr, "DEBUG %s %s %d: " M "\n", \
+	fprintf(stdout, "DEBUG %s %s %d: " M "\n", \
 			__FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #endif
 
@@ -24,7 +24,7 @@
 			__FUNCTION__, __LINE__, clean_errno(), ##__VA_ARGS__)
 
 #define log_info(M, ...) \
-	fprintf(stderr, "[INFO] (%s:%s:%d) " M "\n", \
+	fprintf(stdout, "[INFO] (%s:%s:%d) " M "\n", \
 			__FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #define check(A, M, ...) \

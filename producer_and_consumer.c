@@ -36,12 +36,22 @@ void push (int num)
 	freep++;
 }
 
+void push2 (void item)
+{
+}
+
 int pop (void)
 {
 	freep--;
 	assert(freep >= res);
 	*freep = '\0'; // identify res end
 	return *(freep + 1);
+}
+
+void *pop2 (void)
+{
+	freep--;
+	return freep + 1;
 }
 
 // queue: FIFO
