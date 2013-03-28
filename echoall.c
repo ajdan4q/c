@@ -1,51 +1,40 @@
 /*
  * =====================================================================================
  *
- *       Filename:  environ.c
+ *       Filename:  echoall.c
  *
- *    Description:
+ *    Description:  echo all args and environ
  *
  *        Version:  1.0
- *        Created:  03/13/2013 10:21:26 PM
+ *        Created:  03/18/2013 11:15:05 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
  *         Author:  ajdan4q (), ajdan4q@gmail.com
- *   Organization:
+ *   Organization:  
  *
  * =====================================================================================
  */
 #include <stdlib.h>
 #include <stdio.h>
 
-extern char **environ;
-
-/*
+/* 
  * ===  FUNCTION  ======================================================================
  *         Name:  main
- *  Description:
+ *  Description:  
  * =====================================================================================
  */
-int main (int argc, char *argv[]) {
+int main (int argc, char *argv[])
+{
+	int i;
+	char **ptr;
+	extern char **environ;
 
-	char **env = environ;
+	for (i = 0; i < argc; i++)	/* echo all command arguments */
+		printf("argv[%d]: %s\n", i, argv[i]);
 
-	while (*env != NULL)
-		printf("%s\n", *env++);
+	for (ptr = environ; *ptr != 0; ptr++)	/* and all env strings */
+		printf("%s\n", *ptr);
 
-	char *envar = NULL;
-
-	envar = getenv("HOME");
-	if (envar != NULL)
-		printf("HOME = %s\n", envar);
-
-	envar = getenv("PWD");
-	if (envar != NULL)
-		printf("PWD  = %s\n", envar);
-
-	envar = getenv("PATH");
-	if (envar != NULL)
-		printf("PATH = %s\n", envar);
-
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }				/* ----------  end of function main  ---------- */

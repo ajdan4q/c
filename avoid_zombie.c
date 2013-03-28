@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  fork_demo.c
+ *       Filename:  avoid_zombie.c
  *
- *    Description:  process and child process
+ *    Description:  fork twice, avoid zombie process
  *
  *        Version:  1.0
- *        Created:  03/14/2013 08:59:54 PM
+ *        Created:  03/18/2013 08:06:27 AM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -17,8 +17,8 @@
  */
 #include <stdlib.h>
 #include <unistd.h>
-#include "dbg.h"
 #include <sys/wait.h>
+#include "dbg.h"
 
 /*
  * ===  FUNCTION  ======================================================================
@@ -28,31 +28,27 @@
  */
 int main (int argc, char *argv[])
 {
-	log_info("Main process run ...");
+	pid_t pid;
 
-	pid_t pid = fork();	/* parent and child continue run, after fork() */
+	if ((pid = fork()) < 0)
+		log_err("fork error");
+	else if (pid == 0)	/* child */
+	{
+		if ((pid = fork()) < 0)
+			log_err("fork error");
+		else if (pid != 0)	/* first child */
+			exit(0);
 
-	if (pid == 0)	/* child process */
-	{
-		log_info("[%d] I am child process, ppid is %d",
-				(int) getpid(), (int) getppid());
-	}
-	else if (pid < 0)
-	{
-		err_exit("fork");
-	}
-	else
-	{
-//		sleep(10);
-		int val;
-		pid = wait(&val);
-		log_info("[%d] Main process continue run, my child id is %d",
-				(int) getpid(), (int) pid);
-		log_info("child exit value is %d", val);
+		// second child
+		sleep(2);	/* sleep 2 seconds let its parent(first child) exit */
+		printf("second child [%d], parent [%d]\n",
+				getpid(), getppid());
+		exit(0);
 	}
 
-	/* both of process and child process will run following ... */
-	log_info("[%d] Process go to return [%d]", (int) getpid(), (int) getpgid(0));
+	// parent
+	if (waitpid(pid, NULL, 0) != pid)	/* wait for first child */
+		log_err("waitpid error");
 
 	return EXIT_SUCCESS;
 }				/* ----------  end of function main  ---------- */
